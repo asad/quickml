@@ -58,7 +58,7 @@ public class PredictiveAccuracyTests {
                 attributes.put(headings[x], Double.valueOf((String) splitLine[x]));
             }
             if (!attributes.isEmpty()) {
-                System.out.println("attributes " + attributes + " " + splitLine[splitLine.length - 1]);
+                //System.out.println("attributes " + attributes + " " + splitLine[splitLine.length - 1]);
                 instances.add(new ClassifierInstance(attributes, splitLine[splitLine.length - 1]));
             }
             line = br.readLine();
