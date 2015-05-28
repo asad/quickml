@@ -3,9 +3,6 @@ package quickml;
 import quickml.data.AttributesMap;
 import quickml.data.ClassifierInstance;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.hasEntry;
 
 public class TestUtils {
 

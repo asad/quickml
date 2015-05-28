@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  * Created by ian on 7/4/14.
  */
 public class PredictiveAccuracyTests {
+
     private static final Logger logger = LoggerFactory.getLogger(PredictiveAccuracyTests.class);
 
     @Test
@@ -42,8 +43,7 @@ public class PredictiveAccuracyTests {
 
     }
 
-
-    public static  List<ClassifierInstance> loadIrisDataset() throws IOException {
+    public static List<ClassifierInstance> loadIrisDataset() throws IOException {
         final BufferedReader br = new BufferedReader(new InputStreamReader((new GZIPInputStream(BenchmarkTest.class.getResourceAsStream("iris.data.gz")))));
         final List<ClassifierInstance> instances = Lists.newLinkedList();
 
@@ -55,9 +55,12 @@ public class PredictiveAccuracyTests {
 
             AttributesMap attributes = AttributesMap.newHashMap();
             for (int x = 0; x < splitLine.length - 1; x++) {
-                attributes.put(headings[x], Double.valueOf((String)splitLine[x]));
+                attributes.put(headings[x], Double.valueOf((String) splitLine[x]));
             }
-            instances.add(new ClassifierInstance(attributes, splitLine[splitLine.length - 1]));
+            if (!attributes.isEmpty()) {
+                System.out.println("attributes " + attributes + " " + splitLine[splitLine.length - 1]);
+                instances.add(new ClassifierInstance(attributes, splitLine[splitLine.length - 1]));
+            }
             line = br.readLine();
         }
 

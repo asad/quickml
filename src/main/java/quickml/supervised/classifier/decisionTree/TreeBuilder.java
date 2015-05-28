@@ -62,12 +62,11 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
     private AttributeIgnoringStrategy attributeIgnoringStrategy = new IgnoreAttributesWithConstantProbability(0.0);
 
     //TODO: make it so only one thread computes the below 4 values since all trees compute the same values..
-    private  Serializable minorityClassification;
-    private  Serializable majorityClassification;
-    private  double majorityToMinorityRatio = 1;
+    private Serializable minorityClassification;
+    private Serializable majorityClassification;
+    private double majorityToMinorityRatio = 1;
     private boolean binaryClassifications = true;
     Map<String, AttributeCharacteristics> attributeCharacteristics;
-
 
     public TreeBuilder() {
         this(new GiniImpurityScorer());
@@ -115,29 +114,41 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         this.scorer = scorer;
     }
 
+    @Override
     public void updateBuilderConfig(final Map<String, Object> cfg) {
-        if (cfg.containsKey(SCORER))
+        if (cfg.containsKey(SCORER)) {
             scorer((Scorer) cfg.get(SCORER));
-        if (cfg.containsKey(MAX_DEPTH))
+        }
+        if (cfg.containsKey(MAX_DEPTH)) {
             maxDepth((Integer) cfg.get(MAX_DEPTH));
-        if (cfg.containsKey(MIN_SCORE))
+        }
+        if (cfg.containsKey(MIN_SCORE)) {
             minimumScore((Double) cfg.get(MIN_SCORE));
-        if (cfg.containsKey(MIN_OCCURRENCES_OF_ATTRIBUTE_VALUE))
+        }
+        if (cfg.containsKey(MIN_OCCURRENCES_OF_ATTRIBUTE_VALUE)) {
             minCategoricalAttributeValueOccurances((Integer) cfg.get(MIN_OCCURRENCES_OF_ATTRIBUTE_VALUE));
-        if (cfg.containsKey(MIN_LEAF_INSTANCES))
+        }
+        if (cfg.containsKey(MIN_LEAF_INSTANCES)) {
             minLeafInstances((Integer) cfg.get(MIN_LEAF_INSTANCES));
-        if (cfg.containsKey(MIN_SPLIT_FRACTION))
+        }
+        if (cfg.containsKey(MIN_SPLIT_FRACTION)) {
             minSplitFraction((Double) cfg.get(MIN_SPLIT_FRACTION));
-        if (cfg.containsKey(ORDINAL_TEST_SPLITS))
+        }
+        if (cfg.containsKey(ORDINAL_TEST_SPLITS)) {
             ordinalTestSplits((Integer) cfg.get(ORDINAL_TEST_SPLITS));
-        if (cfg.containsKey(EXEMPT_ATTRIBUTES))
+        }
+        if (cfg.containsKey(EXEMPT_ATTRIBUTES)) {
             exemptAttributes((Set<String>) cfg.get(EXEMPT_ATTRIBUTES));
-        if (cfg.containsKey(DEGREE_OF_GAIN_RATIO_PENALTY))
+        }
+        if (cfg.containsKey(DEGREE_OF_GAIN_RATIO_PENALTY)) {
             degreeOfGainRatioPenalty((Double) cfg.get(DEGREE_OF_GAIN_RATIO_PENALTY));
-        if (cfg.containsKey(ATTRIBUTE_IGNORING_STRATEGY))
+        }
+        if (cfg.containsKey(ATTRIBUTE_IGNORING_STRATEGY)) {
             attributeIgnoringStrategy((AttributeIgnoringStrategy) cfg.get(ATTRIBUTE_IGNORING_STRATEGY));
-        if (cfg.containsKey(IGNORE_ATTR_PROB))
-            ignoreAttributeAtNodeProbability((Double)cfg.get(IGNORE_ATTR_PROB));
+        }
+        if (cfg.containsKey(IGNORE_ATTR_PROB)) {
+            ignoreAttributeAtNodeProbability((Double) cfg.get(IGNORE_ATTR_PROB));
+        }
 
         penalizeCategoricalSplitsBySplitAttributeIntrinsicValue(cfg.containsKey(PENALIZE_CATEGORICAL_SPLITS) ? (Boolean) cfg.get(PENALIZE_CATEGORICAL_SPLITS) : true);
     }
@@ -152,12 +163,10 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         return this;
     }
 
-
     public TreeBuilder<T> scorer(final Scorer scorer) {
         this.scorer = scorer;
         return this;
     }
-
 
     public TreeBuilder<T> maxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
@@ -191,8 +200,8 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
 
     @Override
     public Tree buildPredictiveModel(Iterable<T> trainingData) {
-        List <T> trainingDataList = Lists.newArrayList();
-        for (T instance : trainingData ) {
+        List<T> trainingDataList = Lists.newArrayList();
+        for (T instance : trainingData) {
             trainingDataList.add(instance);
         }
         Set<Serializable> classifications = getClassificationProperties(trainingDataList);
@@ -210,11 +219,12 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         for (T instance : trainingData) {
             Serializable classification = instance.getLabel();
 
-                if (classificationsAndCounts.containsKey(classification)) {
-                   classificationsAndCounts.get(classification).increment();
+            if (classificationsAndCounts.containsKey(classification)) {
+                classificationsAndCounts.get(classification).increment();
 
-                } else
-                    classificationsAndCounts.put(classification, new MutableInt(1));
+            } else {
+                classificationsAndCounts.put(classification, new MutableInt(1));
+            }
 
         }
         if (classificationsAndCounts.size() > 2) {
@@ -257,9 +267,9 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
 
     private double[] createNumericSplit(final List<T> trainingData, final String attribute) {
         int numSamples = Math.min(RESERVOIR_SIZE, trainingData.size());
-        final ReservoirSampler<Double> reservoirSampler = new ReservoirSampler<Double>(numSamples, rand);
+        final ReservoirSampler<Double> reservoirSampler = new ReservoirSampler<>(numSamples, rand);
         int samplesToSkipPerStep = Math.max(1, trainingData.size() / RESERVOIR_SIZE);
-        for (int i=0; i<trainingData.size(); i+=samplesToSkipPerStep) {
+        for (int i = 0; i < trainingData.size(); i += samplesToSkipPerStep) {
             Serializable value = trainingData.get(i).getAttributes().get(attribute);
             if (value == null) {
                 continue;
@@ -269,12 +279,13 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
 
         return getSplit(reservoirSampler);
     }
+
     private Map<String, double[]> createNumericSplits(final List<T> trainingData) {
         final Map<String, ReservoirSampler<Double>> rsm = Maps.newHashMap();
         int numSamples = Math.min(RESERVOIR_SIZE, trainingData.size());
         int samplesToSkipPerStep = Math.max(1, trainingData.size() / RESERVOIR_SIZE);
 
-        for (int i=0; i<numSamples; i+=samplesToSkipPerStep) {
+        for (int i = 0; i < numSamples; i += samplesToSkipPerStep) {
             for (final Entry<String, Serializable> attributeEntry : trainingData.get(i).getAttributes().entrySet()) {
                 if (attributeEntry.getValue() instanceof Number) {
                     ReservoirSampler<Double> reservoirSampler = rsm.get(attributeEntry.getKey());
@@ -314,7 +325,7 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         return split;
     }
 
-    private Node growTree(Branch parent,  List<T> trainingData, final int depth) {
+    private Node growTree(Branch parent, List<T> trainingData, final int depth) {
         Preconditions.checkArgument(!Iterables.isEmpty(trainingData), "At Depth: " + depth + ". Can't build a tree with no training data");
         if (depth >= maxDepth) {
             return getLeaf(parent, trainingData, depth);
@@ -330,7 +341,6 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
             //The best score condition naturally catches the situation where all instances have the same classification.
             return getLeaf(parent, trainingData, depth);
         }
-
 
         ArrayList<T> trueTrainingSet = Lists.newArrayList();
         ArrayList<T> falseTrainingSet = Lists.newArrayList();
@@ -433,8 +443,8 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
     private Pair<? extends Branch, Double> createTwoClassCategoricalNode(Node parent, final String attribute, final Iterable<T> instances) {
 
         double bestScore = 0;
-        final Pair<ClassificationCounter, List<AttributeValueWithClassificationCounter>> valueOutcomeCountsPairs =
-                ClassificationCounter.getSortedListOfAttributeValuesWithClassificationCounters(instances, attribute, minorityClassification);  //returs a list of ClassificationCounterList
+        final Pair<ClassificationCounter, List<AttributeValueWithClassificationCounter>> valueOutcomeCountsPairs
+                = ClassificationCounter.getSortedListOfAttributeValuesWithClassificationCounters(instances, attribute, minorityClassification);  //returs a list of ClassificationCounterList
 
         ClassificationCounter outCounts = new ClassificationCounter(valueOutcomeCountsPairs.getValue0()); //classification counter treating all values the same
         ClassificationCounter inCounts = new ClassificationCounter(); //the histogram of counts by classification for the in-set
@@ -446,8 +456,9 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         double probabilityOfBeingInInset = 0;
         int valuesInTheInset = 0;
         int attributesWithSufficientValues = labelAttributeValuesWithInsufficientData(valuesWithClassificationCounters);
-        if (attributesWithSufficientValues <= 1)
+        if (attributesWithSufficientValues <= 1) {
             return null; //there is just 1 value available.
+        }
         double intrinsicValueOfAttribute = getIntrinsicValueOfAttribute(valuesWithClassificationCounters, numTrainingExamples);
 
         for (final AttributeValueWithClassificationCounter valueWithClassificationCounter : valuesWithClassificationCounters) {
@@ -456,14 +467,16 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
                 continue;
             }
             if (this.minDiscreteAttributeValueOccurances > 0) {
-                if (!testValCounts.hasSufficientData()) continue;
+                if (!testValCounts.hasSufficientData()) {
+                    continue;
+                }
             }
             inCounts = inCounts.add(testValCounts);
             outCounts = outCounts.subtract(testValCounts);
 
             double numInstances = inCounts.getTotal() + outCounts.getTotal();
-            if (!exemptAttributes.contains(attribute) && (inCounts.getTotal()/ numInstances <minSplitFraction ||
-                    outCounts.getTotal()/ numInstances < minSplitFraction)) {
+            if (!exemptAttributes.contains(attribute) && (inCounts.getTotal() / numInstances < minSplitFraction
+                    || outCounts.getTotal() / numInstances < minSplitFraction)) {
                 continue;
             }
 
@@ -474,7 +487,8 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
             double thisScore = scorer.scoreSplit(inCounts, outCounts);
             valuesInTheInset++;
             if (penalizeCategoricalSplitsBySplitAttributeIntrinsicValue) {
-                thisScore = thisScore * (1 - degreeOfGainRatioPenalty) + degreeOfGainRatioPenalty * (thisScore / intrinsicValueOfAttribute);            }
+                thisScore = thisScore * (1 - degreeOfGainRatioPenalty) + degreeOfGainRatioPenalty * (thisScore / intrinsicValueOfAttribute);
+            }
 
             if (thisScore > bestScore) {
                 bestScore = thisScore;
@@ -501,9 +515,9 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
                 //outSet.add(attributeValueWithClassificationCounter.attributeValue);
             }
         }
-        if (bestScore==0)
+        if (bestScore == 0) {
             return null;
-        else {
+        } else {
 
             Pair<CategoricalBranch, Double> bestPair = Pair.with(new CategoricalBranch(parent, attribute, inSet, probabilityOfBeingInInset), bestScore);
             return bestPair;
@@ -543,18 +557,20 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
 
     private double getIntrinsicValueOfNumericAttribute() {
         double informationValue = 0;
-        double attributeValProb = 1.0/ordinalTestSpilts;
-            informationValue -= Math.log(attributeValProb) / Math.log(2);//factor of 1.0/ordinalTestSplits * ordinalTestSplits cancels
+        double attributeValProb = 1.0 / ordinalTestSpilts;
+        informationValue -= Math.log(attributeValProb) / Math.log(2);//factor of 1.0/ordinalTestSplits * ordinalTestSplits cancels
 
         return informationValue;
     }
 
     private Pair<? extends Branch, Double> createNClassCategoricalNode(Node parent, final String attribute,
-                                                                       final Iterable<T> instances) {
+            final Iterable<T> instances) {
 
         final Set<Serializable> values = getAttrinbuteValues(instances, attribute);
 
-        if (insufficientTrainingDataGivenNumberOfAttributeValues(instances, values)) return null;
+        if (insufficientTrainingDataGivenNumberOfAttributeValues(instances, values)) {
+            return null;
+        }
 
         final Set<Serializable> inValueSet = Sets.newHashSet(); //the in-set
 
@@ -576,7 +592,9 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
                     continue;
                 }
                 if (this.minDiscreteAttributeValueOccurances > 0) {
-                    if (shouldWeIgnoreThisValue(testValCounts)) continue;
+                    if (shouldWeIgnoreThisValue(testValCounts)) {
+                        continue;
+                    }
                 }
                 final ClassificationCounter testInCounts = inSetClassificationCounts.add(testValCounts);
                 final ClassificationCounter testOutCounts = outSetClassificationCounts.subtract(testValCounts);
@@ -623,22 +641,24 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         final Set<Serializable> values = Sets.newHashSet();
         for (T instance : trainingData) {
             Serializable value = instance.getAttributes().get(attribute);
-            if (value == null) value = MISSING_VALUE;
+            if (value == null) {
+                value = MISSING_VALUE;
+            }
             values.add(value);
         }
         return values;
     }
 
     private boolean attributeValueOrIntervalOfValuesHasInsufficientStatistics(final ClassificationCounter testValCounts) {
-        Preconditions.checkArgument(majorityClassification!=null && minorityClassification !=null);
+        Preconditions.checkArgument(majorityClassification != null && minorityClassification != null);
         Map<Serializable, Double> counts = testValCounts.getCounts();
-        if (counts.containsKey(minorityClassification) &&
-                counts.get(minorityClassification) > minDiscreteAttributeValueOccurances) {
+        if (counts.containsKey(minorityClassification)
+                && counts.get(minorityClassification) > minDiscreteAttributeValueOccurances) {
             return false;
         }
 
-        if (counts.containsKey(majorityClassification) &&
-                counts.get(majorityClassification) > majorityToMinorityRatio * minDiscreteAttributeValueOccurances) {
+        if (counts.containsKey(majorityClassification)
+                && counts.get(majorityClassification) > majorityToMinorityRatio * minDiscreteAttributeValueOccurances) {
             return false;
         }
 
@@ -649,6 +669,7 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
 
         return true;
     }
+
     private boolean shouldWeIgnoreThisValue(final ClassificationCounter testValCounts) {
         Map<Serializable, Double> counts = testValCounts.getCounts();
 
@@ -671,7 +692,7 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
     }
 
     private Pair<? extends Branch, Double> createNumericBranch(Node parent, final String attribute,
-                                                               List<T> instances) {
+            List<T> instances) {
 
         double bestScore = 0;
         double bestThreshold = 0;
@@ -693,8 +714,8 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
             ClassificationCounter outClassificationCounts = ClassificationCounter.countAll(outSet);
 
             double numInstances = inClassificationCounts.getTotal() + outClassificationCounts.getTotal();
-            if (!exemptAttributes.contains(attribute) && (inClassificationCounts.getTotal()/ numInstances <minSplitFraction ||
-                    outClassificationCounts.getTotal()/ numInstances < minSplitFraction)) {
+            if (!exemptAttributes.contains(attribute) && (inClassificationCounts.getTotal() / numInstances < minSplitFraction
+                    || outClassificationCounts.getTotal() / numInstances < minSplitFraction)) {
                 continue;
             }
 
@@ -709,8 +730,6 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
                 continue;
             }
 
-
-
             double thisScore = scorer.scoreSplit(inClassificationCounts, outClassificationCounts);
             if (thisScore > bestScore) {
                 bestScore = thisScore;
@@ -721,14 +740,14 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
         if (bestScore == 0) {
             return null;
         }
-        double penalizedBestScore = bestScore/getIntrinsicValueOfNumericAttribute();
+        double penalizedBestScore = bestScore / getIntrinsicValueOfNumericAttribute();
         return Pair.with(new NumericBranch(parent, attribute, bestThreshold, probabilityOfBeingInInset), penalizedBestScore);
     }
 
     public static class AttributeCharacteristics {
+
         public boolean isNumber = true;
     }
-
 
     private class GreaterThanThresholdPredicate implements Predicate<T> {
 
@@ -787,8 +806,9 @@ public final class TreeBuilder<T extends ClassifierInstance> implements Predicti
     }
 
     private class ScoreValuePair {
-        private double score;
-        private Serializable value;
+
+        private final double score;
+        private final Serializable value;
 
         private ScoreValuePair(final double score, final Serializable value) {
             this.score = score;

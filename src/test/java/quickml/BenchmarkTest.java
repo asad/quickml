@@ -101,13 +101,13 @@ public class BenchmarkTest {
             instances.add(instances.size(), instances.get(random.nextInt(instances.size()-1)));
         }
         double time0 = System.currentTimeMillis();
-        TreeBuilder<ClassifierInstance> treeBuilder = new TreeBuilder<>(new GiniImpurityScorer())
+        TreeBuilder<ClassifierInstance> tBuilder = new TreeBuilder<>(new GiniImpurityScorer())
                 .ordinalTestSplits(10)
                 .attributeIgnoringStrategy(new IgnoreAttributesWithConstantProbability(0.0))
                 .maxDepth(16)
                 .minLeafInstances(5)
                 .binaryClassification(true);
-        treeBuilder.buildPredictiveModel(instances);
+        tBuilder.buildPredictiveModel(instances);
 
         double time1 = System.currentTimeMillis();
         System.out.println("run time in seconds on numeric data set: " + (time1-time0)/1000);
